@@ -1,0 +1,1785 @@
+3451 Notes
+Office Hours: directly after class
+Use Piazza for communication
+August 22, 2023:
+- Read about pixels, matrices, and transformations (this week)
+- 4 areas of graphics (computer vision is the opposite)
+- Modeling
+- Coming up with a geometric representation of a surface
+- Creating them internally
+- Rendering (image synthesis)
+- Create an image from a model
+- Animation
+- Making objects move over time
+- Making moving models
+- Image + Video Manipulation
+- Overlap between graphics and computer vision
+- War up project information
+- Raster Images
+- Image that’s constructed by a group of pixels (picture elements)
+- Row of pixels is a scanline
+- Each pixel has a color: (r, g, b): 0-255
+- Screen/Window coordinates (processing)
+- size(width, height)
+- Width and height are built-in identifiers (if u set size, don’t have to
+declare separately)
+- rect(upper left x, upper left y, width, height)
+- circle(center x, center y, diameter)
+- fill(r, g, b)- color that the shape is gonna be
+- background(r, g, b)- background color
+- x = mouseX; (constantly following the cursor x)
+- y = mouseY; (constantly following the cursor y)
+- Drawing arbitrary polygons
+- beginShape()
+- vertex(200,200)
+- vertex(400,200)
+- vertex(400,400)
+- endShape(CLOSE)
+- If u omit that, u’ll have an open shape
+- x’ = (x+2)*500/4
+- Translating coordinate ranges
+- Flip y coordinates
+- y’ = height - y
+- **Java/Processing uses RADIANS
+- PI is a constant
+- Drawing Lines away from a center
+- xc = 200
+- yc = 200
+- num = 20
+- radius = 20
+- for (int i = 0; i <= num; i++) {
+- theta = 2*PI*i/(float)num;
+- x = xc + radius*cos(theta)
+- y = yc + radius*sin(theta)
+- line(xc, yc, x, y);
+- Pentagons
+- Radius- distance from center to one of its vertices (regular
+pentagon)
+- Warm-up exercise: draw a big pentagon, as well as five smaller
+pentagons
+- When the cursor is down at the bottom of the screen, the
+smaller pentagons’ radii are zero
+- When the cursor is half of the screen down, the radius is
+quarter of the radius of the bigger pentagon
+- Small radius is in the range of zero to the initial radius over
+2
+- Distance from center of big pentagon to center of smaller
+pentagon is [radius, 2*radius]
+- Cursor on far left- barely touching, right- smaller pentagons
+are pushed right
+- Processing
+- Setup
+- Initializes things
+- Draw command
+- Executed again and again and again
+August 24, 2023:
+- Transformations
+- Translate
+- Moving something from one place to another
+- Scale
+- Change size
+- Product of a 2x2 matrix
+- Rotate
+- x’ = x*cos(theta) - y*sin(theta)
+- y’ = x*sin(theta) + y*cos(theta)
+- P’ = R * P
+- Moves over an axis as well
+- Reflection
+- Flipping something around a given axis
+- Flip around the y-axis
+- x’ = -x
+- y’ = y
+- RFx = [-1 0 over 0 1]
+- P’ = RFx * P
+- Homogeneous Coordinates
+- point(x, y) -> [x over y over 1]
+- Homogeneous coordinate
+- R = [cos -sin 0 over sin cos 0 over 0 0 1]
+- S = [Sx 0 0 over 0 Sy 0 over 0 0 1]
+- T = [1 0 Tx over 0 1 Ty over 0 0 1][x + 0 + Tx over 0 + y + Ty over 1]
+- If we want to rotate something by its center, move it to the origin (this will keep it in
+place)
+- Translate (-a, -b)
+- [1 0 -a over 0 1 -b over 0 0 1]
+- Rotate by 90 degrees
+- [0 -1 0 over 1 0 0 over 0 0 1]
+- Translate (a, b)
+- [1 0 a over 0 1 b over 0 0 1]
+- P’ = T2*[R*(T1*P)] = (T2 * R * T1) * P
+- Composition of Transformations
+- US- uniform scale
+- NS- not a uniform scale
+- Commute? (2D)
+-
+T R US NS
+T Y N N N
+R Y (does not
+commute in
+Y N
+3D)
+US Y Y
+NS Y
+August 29, 2023:
+Shapes
+void square() {
+beginShape();
+vertex(1, 1);
+vertex(1, -1);
+vertex…
+vertex…
+endShape(CLOSE);
+}
+//Using the OpenGL library:
+Initialize() // C = I (sets current transformation matrix to the identity matrix)
+scale(100, 100);
+square();
+- Scale modifies the current transformation matrix
+- C starts at the identity C = I
+- Scale modifies it: 𝐶
+𝑛𝑒𝑤 = 𝐶
+𝑜𝑙𝑑
+* 𝑆
+- All vertices in the vertex command are modified by the current transformation
+matrix
+- V = [1 over 1 over 1], C = [100 diagonal 100 diagonal 1]
+- V’ = C*V
+- V’ = [100 over 100 over 1]
+Scale + Translate (order is important)
+To get to corners at (0, 0) and (400, 400): y’ - height - y
+Initialize(); // C = I
+Translate(200, 200); // C = T
+Scale(100, 100); // C = T*S (can’t switch them around)
+Square(); // Draw the new square
+P’ = T*S*P (T*S*P = C)
+Let P = (1, 1)
+(1, 1) →(S)→ (100, 100) →(T)→ (300, 300), which is P’
+Commands for OpenGL
+Initialize()- set C to the identity matrix (friction)
+vertex(x, y)- position is multiplied by C, then drawn
+scale(x, y)- 𝐶
+𝑛𝑒𝑤 = 𝐶
+𝑜𝑙𝑑
+* 𝑆
+translate(x, y)- 𝐶
+𝑛𝑒𝑤 = 𝐶
+𝑜𝑙𝑑
+* 𝑇
+rotate(theta)- 𝐶
+𝑛𝑒𝑤 = 𝐶
+𝑜𝑙𝑑
+* 𝑅
+push()- replicates C and pushes it onto the top of the stack
+pop()- pops off the top of the stack and discards it
+Person (limited by only using squares):
+void Person() {
+pushMatrix() // torso
+scale(1, 2) //scaled by 1, 2 (stretched vertically)
+square()
+popMatrix()
+pushMatrix() // head
+translate(0, 3.4) // 3.4 ~ 2+sqrt(2)
+rotate(45*PI/180)
+square()
+popMatrix()
+pushMatrix() // arms, right arm
+translate(2, 1.5)
+scale(1, 0.5)
+square()
+popMatrix()
+pushMatrix() // left arm
+translate(-2, 1.5)
+scale(1, 0.5)
+popMatrix()
+}
+Matrix stack (starting, the identity matrix is the only thing on the stack)
+- Pushing another matrix to the matrix stack (adds the new one on top of the old one), the
+new one is a replica of the one right below
+- Matrix stack automatically starts with the identity matrix on the bottom and C (current
+transformation matrix) pointing to it
+- When you pop a matrix from the matrix stack, the top one disappears (where the C
+pointer was pointing), and it points back to the lowest matrix (the identity matrix)
+Drawing Two People:
+void twoPeople() {
+push() // Person #1
+translate(100, 200)
+scale(10, 10)
+Person()
+pop()
+push() // Person 2
+translate(300, 200)
+scale(10, 10)
+Person()
+pop()
+}
+Matrix Stack Uses:
+1. Use convenient coordinates for object creation
+2. Object re-use (instantiation) (initialization)
+3. Hierarchy: objects are made up of sub-objects
+Projection (taking an object from some space to a lower-dimension space)
+- View plane- screen of a workstation or cell phone screen (parallel projection)
+- Projectors are the points in the image that are projected to the screen
+- Parallel projection- projectors are all parallel, use when drafting or creating the plans for
+a house or car (3D to 2D)
+- Perspective projection- center of projection, and a view plane, but the projectors get
+projected along a projector and we end up with a smaller version of the 3D object (from
+3D to 2D)
+- Use: image synthesis, mimic camera or an eye
+- Used more often
+August 31, 2023 (Reading: View + Project: 3D Rotation):
+- Terminology
+- Right-handed coordinate system
+- If you point your right thumb on the x-axis and your right index finger up
+for the y-axis, the z-axis will be if you make the rest of your fingers go the
+other direction
+- Orthographic Projection (subset of parallel projection)
+- x comes towards us
+- Project to a point P’ that has a z value of 0
+- P = (x, y, z)
+- P’ = (x, y, 0)
+- We need to know what part of the infinite plane the user wants to appear on the
+screen- known as the orthographic view volume
+- Orthographic View Volume:
+- (l, b, n) to (r, t, f)
+- We care about x coordinates that are in the range of [left, right] = [l, r]
+- For y, it’s [bottom, top] = [b, t]
+- For z, it’s [near, far] = [n, f]
+- View plane → screen (mapping): infinite, bt we only care about a small chunk of
+it
+- left → right = (0, 0) → (w, 0)
+- bottom → top = (0, 0) → (0, h)
+- x-coordinate mapping: x in the range [left, right] → [0, w]
+- First, subtract left → [0, right - left]
+- Divide by (right - left) and multiply by w → [0, w]
+- x’ = (x - left)*w/(right - left)
+- y-coordinate mapping: y’ = (y - bottom)*h/(top - bottom)
+- Perspective Projection
+- Looking through the eye, then to the view plane, and then the actual object is
+behind that, much bigger
+- y’/1 = y/|z|
+- x’/1 = x/|z|
+- Perspective projection- a vision by z (absolute value: looking at distances)
+- Field of View (FOV)
+- User with specify some axis Θ (theta)
+- Narrow field of view: zooming in
+- We care about everything k and -k (in the y-axis), those are the top and bottom of
+the screen
+- tan(Θ/2) = k/1, k = tan(Θ/2)
+- Mapping the range of [-k, k] to different parts of the screen
+- y’ is in [-k, k] → y’’ in [0, h]
+- First, add k → [0, 2k]
+- Multiply by h and divide by 2k → [0, h]
+- y’’ = (y’+k)*h/(2*k)
+- The view plane is an abstraction
+- Unit Vector + Normalization
+- v = (x, y, z)
+- vHat = v/|v| = (x, y, z)/ 𝑥
+2
++ 𝑦
+2
++ 𝑧
+2
+- Process of normalization
+- vHat * vHat - 1
+- If A and B are perpendicular to each other (orthogonal), then A * B = 0 (dot
+product)
+- Cross product- take in 2 vectors and get another vector out
+- v1 = (x1, y1, z1)
+- v2 = (x2, y2, z2)
+- v1 x v2 = (y1z2 - y2z1, z1x2 - z2x1, x1y2 - x2y1)
+- Orthogonal to v1 and v2, perpendicular to both of those
+- Assume we have a vector A = (ax, ay), that’s unit length = (cosΘ, sinΘ)
+- If we wanna rotate the vector to be coincident with the x-axis, we will
+create another vector B that’s perpendicular to A
+- B = (-ay, ax) = (bx, by)
+- R = [ax ay 0 over bx by 0 over 0 0 1]
+- If you multiply R by A (R*A), you rotate R to the x-axis
+- A = [ax over ay over 1]
+- R*A = [𝑎𝑥 over over ]
+2
++ 𝑎𝑦
+2
++ 0 𝑎𝑥𝑏𝑥 + 𝑎𝑦𝑏𝑦 + 0 1
+- Is the same as [1 over 0 over 1] = (1, 0) = [A*A
+over A*B over 1]
+- Arbitrary 3D Rotation
+- A = (ax, ay, az)
+- We want to rotate the world around A by angle Θ (assume A is unit length,
+if not, divide by its magnitude)
+- Stages
+- Rotate to the x-axis
+- Rotate that Θ amount
+- Rotate it back up
+- Pretend we have a vector N that is not parallel to A
+- if (ax == 0)
+- N = (1, 0, 0): the x-axis
+- else
+- N = (0, 1, 0): the y-axis
+- B = A x N/|A x N| (AxN is guaranteed to be nonzero)
+- C = A x B
+- 3 vectors that are mutually perpendicular to each other, and they are all
+unit length
+- R1 = [ax ay az 0 over bx by bz 0 over cx cy cz 0 over 0 0 0 1]
+- R1 * A = [A*A over A*B over A*C over 1] = [1 over 0 over 0 over 1]
+- This rotates A to the x-axis
+- R2 = [1 0 0 0 over 0 cosΘ -sinΘ 0 over 0 sinΘ cosΘ 0 over 0 0 0 1]
+- R3 = R1^(-1)
+- For rotation matrices only
+- R3 = R1^-1 = R1^T (transpose)
+- R = 𝑅 =
+1
+𝑇
+* 𝑅
+2
+* 𝑅
+1
+𝑅
+3
+* 𝑅
+2
+* 𝑅
+1
+- View Transform
+- Given: eye position in 3D, a center that’s also in 3D, and an up vector (9 numbers
+instead of 6)
+- Want: eye is moved to the origin (0, 0, 0), center to be along the -z axis, the
+up-vector to be lying in the yz-plane
+- 2 operations:
+- First a translation, then a rotation (V = R*T)
+- Translation
+- Translate by (-ex, -ey, -ez)
+- Rotation (x, y, -z)
+September 5, 2023:
+- Book Terminology
+- e: eye
+- g: gaze direction
+- t: view-up direction
+- Processing Terminology
+- e: eye
+- c: center-eye
+- u: up
+- Viewing Transformation
+- In Processing
+- camera(ex, ey, ez, cx, cy, cz, ux, uy, uz)
+- eye, center, up
+- g = center - eye
+- up is a vector that is detached from everything
+- Make orthogonal basis
+- w = -g/|g|, w vector is parallel to g, -w is the same direction as g
+- u = (t x w)/|(t x w)|
+- v = w x u
+- R = [ux uy uz 0 over vx vy vz 0 over wx wy wz 0 over 0 0 0 1]
+- V = R * T
+- Using the View Transformation
+- Ex 1
+- camera(0, 0, 8, 0, 0, 0, 0, 1, 0);
+- eye, center, up
+- Translate by (0, 0, -8)
+- Ex 2
+- camera(0, 0, 0, 1, 0, 0, 0, 1, 0);
+- The eyeball is already at the origin
+- Our center is in the positive x direction, we are looking at the
+center
+- We want the center to in the -z direction
+- Y rotation by 90 degrees (PI/2), counterclockwise
+- Output Devices
+- CPU ←→ Bus ←→ Memory 1: Memory 2 →Video Controller → Output
+Display
+- When the computer is writing a new image to memory 1, then the image is
+displaying from memory 2
+- “Double buffering”
+- No flickering images, no tearing, we don’t see partly blank
+screens
+- LCDs
+- Liquid crystal: molecules move (like a liquid), maintain orientation (like a
+solid)
+- Liquid crystals can be affected by a number of things: electric charge,
+pressure, temperature, magnetic field, etc. (mood rings)
+- Twisted nematic liquid crystals- used LCDs
+- Nematic: the molecules are oriented in parallel but not arranged in
+well-defined planes.
+- Stacks of twisted crystals
+- Dark and Light Pixels
+- Liquid Crystals (no voltage)
+- Light (source) → polarizer → (vertically polarized light) →
+liquid crystal (no voltage, no charge, rotating the light,
+rotate by 90 degrees) → polarizer (horizontal, light passes
+through) → eye (light comes through, we see the pixel)
+- Liquid Crystals (voltage ON)
+- Light source (not polarized light) → vertical polarizer →
+liquid crystal (voltage ON: un-twists the crystal, no rotation
+(light passes through unchanged, still vertically polarized))
+→ horizontal polarizer chops out the light → eye (no light,
+pixel is off)
+- Partially-lit crystal? Intermediate voltage
+- Partial unwisting → partial light
+- What about color?
+- One piece for red, one piece for green light coming through, one
+piece for blue light (rgb is a single pixel)
+- When they are all off, it’s black, when they’re all on, they give our
+eye the perception of white
+- E-ink (electronic ink)
+- Electronic paper/ink/etc.
+- Used by some forms of e-books: kindles, Nook, etc.
+- Invented by Xerox
+- No NOT emit light, but reflect it instead
+- Based on pigment particles that move
+- Pigment (something that absorbs light)
+- (black pigment absorbs all wavelengths)
+- Placed in microcapsules (small enough you need a magnifying
+glass to see them), dozens of microcapsules per pixel, in a pattern
+that is organic
+- Eye is at top, looking below
+- Top - + -
+- -----------------------------
+OOO ← particles are in these microcapsules, attracted to
+top and bottom depending on charge
+- -----------------------------
+- Bottom + - +
+- Black particles: positively charged, and white particles are
+negatively charged, opposites attract
+- Advantages
+- Can read a book in bright run
+- Low energy consumption (apply voltage once, and don’t
+have to do it again, particles stay there)- don’t have to
+charge a lot
+- Disadvantages
+- Slow image switching time (can see it refresh)- can’t show
+animation on that type of screen
+- Color versions, but they’re expensive
+September 7, 2023:
+Rasterization: Read Line, Triangles, and Triangle Rasterization
+- Parametric Lines
+- t is our parameter (like a slider)
+- P1(x1, y1) → P2(x2, y2)
+- Q(t) is the straight line that connects the points
+- dx = x2 - x1 (horizontal distance)
+- dy = y2 - y1 (vertical distance)
+- Q(t) = (x(t), y(t))
+- x(t) = x1 + t(x2 - x1) = x1 + t*(dx), where dx = x2 - x1 (delta x)
+- Also equal to (1 - t)x1 + t*x2
+- Weighted sum of x1 and x2, the weights add up to 1
+- Also equal to Q(t) = P1 + t(P2 - P1)
+- y(t) = y1 + t(y2 - y1) = y1 + t*dy, where dy = x2 - x1 (delta y)
+- Also equal to (1 - t)y1 + t*y2
+- Weighted sum of y1 and y2, the weights add up to 1
+- Also equal to Q(t) = P1 + t(P2 - P1)
+- Q(0) = P1, Q(1) = P2
+- Q(t) = P1 + t(P2 - P1)
+- P2 - P1 is a vector quantity, t is a scalar
+- Implicit Line Equation
+- On a line when f(x,y) = 0 ? (is f(x,y) equal to 0?)
+- f(x, y) is a point on the line
+- As we get closer to the line, the numbers get closer and closer to 0, points to the
+right of the line are positive, points to the line’s left are negative
+- f(x,y) = ax + by + c ?= 0
+- a, b, and c are coefficients for a particular line
+- Similar to y = mx + B (implicit line equation, slightly different form)
+- If a^2 + b^2 = 1, then f(x, y) gives us the distance to the line
+- To change the line a little, then multiply all three coefficients by
+something (negative slope, multiply by -1, you can normalize ab by
+dividing a and b and c by a^2 + b^2)
+- Example
+- (x0, y0) → (x1, y1)
+- f(x, y) = ax + by + c = 0
+- a*x0 + b*y0 + c = 0
+- a*x1 + b*y1 + c = 0
+- Subtract
+- a*(x0 - x1) + b*(y0 - y1) = 0
+- a(x0 - x1) = -b(y0 - y1)
+- a = -b(y0 - y1)/(x0 - x1) = b(y1 - y0)/(x0 - x1)
+- Pick any value of b, ex. b = 1
+- a = b(y1 - y0)/(x0 - x1)
+- c = (plug a and b into either of the first two equations)
+- Incremental Line Drawing (How to Draw a Line Segment)
+- void line(x0, y0, x1, y1) { //every variable is a float
+- dx = x1 - x0
+- dy = y1 - y0
+- length = max(|dx|, |dy|)
+- x-inc = dx/length
+- y-inc = dy/length
+- x = x0 //starting value
+- y = y0 //starting value
+- //the real rasterization part
+- for (i = 0; i <= length i++) {
+- WritePixel(round(x), round(y), (255, 255, 255)); //rounding to
+nearest integer, the last value is the color of the pixel
+- x += x-inc;
+- y += y-inc;
+- }
+- } //end of routine
+- Example
+- (2, 2) is a pixel, not a square (on a grid)
+- Going from (1, 3) to (5, 5)
+- Draw a line between those pixels
+- dx = 5 - 1 = 4
+- dy = 5 - 3 = 2
+- length = 4
+- x-inc = 1
+- y-inc = 0.5
+-
+x y
+1 3
+2 3.5 (can’t have half a pixel), pixel
+is at 4
+3 4
+4 4.5 (pixel is at 5)
+5 5
+- Because of adding those 0.5s, we get stairsteps, but since we zoom out a
+lot, they will end up looking normal
+- This is called aliasing
+- Aliasing = bad jaggies
+- There are variations that do what is called as anti-aliasing
+- We use gray values instead of white or black, slightly
+different colors depending on what the background is like
+- This particular line-drawing algorithm is parametric
+- If it is parametric, where the heck is the parameter t?
+- There’s actually t = 1/length in this formula
+- Polygon Rasterization
+- Goal: fill the polygon with pixels, no cracks between polygons, and no overlaps
+between polygons
+- Fill rectangles:
+- Rectangle from (0, 0) to (3, 4), or (x-min, y-min) → (x-max, y-max)
+- Pseudocode:
+- for (y = y-min; y < y-max; y++) {
+- for (x = x-min; x < x-max; x++) {
+- WritePixel(x, y, 0, 0, 0);
+- }
+- }
+- We don’t fill in the last value of x and the last value of y because we don’t
+want overlaps
+- Row of pixels = scanline
+- Convex polygons
+- If you slice them with a straight line, you enter it once, and you leave it
+once (as long as the line doesn’t go through one of the vertices)
+- Find the leftmost intersection between a scanline and the polygon, and fill
+between them (do this for every scanline)
+- for (y = y-min; y < y-max; y++) {
+- fill between intersections (don’t fill in the rightmost endpoint)
+- }
+- Concave polygons
+- On the other hand, concave objects are a but more annoying to draw, there
+are some lines where you enter and leave more than once
+- Can enter and leave more than once along a line
+- There are “caves” in conCAVE polygons
+September 12, 2023:
+Triangle Rasterization
+- Read: Triangles, Triangle Rasterization
+- Why triangles? Always convex, fixed size data structures, flat
+- Today’s lecture is the base of project 3 (triangle rasterization)
+- How to do triangle rasterization
+- Draw a bunch of scanlines (straight horizontal lines)
+- Draw the outline of the triangle
+- Find where the edge of the triangle intersect the scalines
+- Draw the vertical lines (to make a grid with the scanlines)
+- Fill the points/pixels from one endpoint to the other (only the ones inside are
+filled, the edges are not filled)
+- Pseudocode (for general rasterization):
+- for (int y = ymin; y < ymax; y++):
+- find x intersections (intersection between a scanline and an edge
+pixel)
+- sort intersections on their x values
+- fill between pairs of intersections (for loop, find the smaller x
+value and fill to the bigger one)
+- What about general polygons (including concave ones)?
+- There are some weird cases
+- Gory Details
+- Find x (float), could be between two columns of pixels
+Triangle Rasterization
+- We will keep track of edge information
+- {x, dx}
+- x = intersection of a polygon edge with the current scanline
+- dx = change in x between scanlines
+- Pseudocode:
+- Find ymin and ymax
+- Find xleft and xright and dx_left, and dx_right (floats!)
+- for (y = ceil(ymin); y < floor(ymax); y++) { //ceiling is the next integer,
+rounds up to the next integer
+- for (x = ceil(xleft); x < xright; x++) {
+- WritePixel(x, y, r, g, b);
+- //maybe switch edges (have we gone beyond the y-coordinate of
+this polygon?)
+- }
+- xleft += dx.left;
+- xright += dx.right
+- }
+- x-coordinate at intersection of edge + scanline (x)
+- (x0, y0) → (x1, y1)
+- vertical distance between horizontal scanlines = 1 pixel
+- Create two triangles, one small and one large
+- int y = ceiling(y0);
+- From the little triangle to the big triangle, set it as a ratio
+- xDif / (y - y0) = (x1 - x0) / (y1 - y0)
+- float x = x0 + xDif
+- Finding dx, the amount we shift x between scanlines
+- Draw both the big and small triangles from one scanline to another
+- dx/dy = (x1 - x0) / (y1 - y0)
+- dy = 1
+- dx = (x1 - x0) / (y1 - y0)
+- When you switch edges, you have to recalculate dx and dy for the new edges
+The textbook does triangle rasterization a bit differently. Why is that?
+- There are 2 cases of rasterization
+- “Software”
+- “Hardware”
+- Not ray tracing
+- Software
+- Method Professor Turk showed
+- Incremental
+- Used in vector graphics representations (laser printer, pdfs)
+- Hardware
+- Barycentric coordinates
+- GPU’s
+- Textbook’s method
+- Barycentric coordinates
+- Triangle areas (P1, P2, P3)
+- R → S (E1)
+- R → T (E2)
+- E1 = S - R
+- E2 = T - R
+- Area(R, S, T) = ½ * |(the length of (E1 x E2))|
+- Cross product of two vectors gives you the area of the parallelogram, cutting that
+in half gives you the area of the triangle
+- We want the SArea, or the signed area
+- = ½ * z-coordinate(E1 x E2)
+- Triangle (P1, P2, P3, point Q)
+- Q is a point inside the triangle
+- Forms A1, A2, and A3 (signed areas)
+- A = A1 + A2 + A3 (total area)
+- alpha = A1/A
+- beta = A2/A
+- gamma = A3/A
+- alpha, beta, and gamma are the barycentric coordinates of the point Q
+- alpha + beta + gamma = 1 by construction
+- alpha, beta, and gamma are basically how far away Q is from that
+respective point
+- Q = alpha*P1 + beta*P2 + gamma*P3
+- What happens when Q is outside the triangle?
+- Some areas will be positive, and some will be negative (they will still add
+up to 1)
+- The signs depend on which way the angle to Q goes from one point to
+another
+- Easy point-in-triangle test:
+- If alpha, beta, or gamma is negative, then Q is outside the triangle
+September 14, 2023:
+Virtual Reality
+- Visual immersion in a synthetic world
+- Turn on head modifies what user sees
+- Necessary VR components
+- Track user’s head motion
+- Create images of virtual world (image synthesis)
+- Display the images to the user (also use a lens to refocus the image)
+- History of VR
+- Ivan Sutherland, 1960s
+- Considered the founder of computer graphics
+- Famous for Sketchpad (early drawing program with constraints)
+- Won ACM Turing Award
+- U. of Utah graphics program 1968-1974
+- Quest for “Ultimate Display”
+- Built first head-mounted display system
+- Sword of Damocles
+- Had all parts of a VR system
+- Tracking device (mechanical linkages)
+- Real-time rendering system
+- Head-mounted display (HMD)
+- Actually augmented reality
+- After Sutherland
+- Research labs continued his efforts
+- Henry Fuchs at UNC Chapel Hill
+- Steven Feiner at Columbia
+- Often called “Virtual Environments”
+- Jaron Lanier, 1980s-90s
+- Founded company VPL in late 1980s
+- Coined term “Virtual Reality”
+- VPL sold virtual reality systems
+- Magnetic tracking system
+- Rendering system
+- Head-mounted display (HMD)
+- Data glove (input sensor)
+- VR in 1990s
+- Didn’t live upto the hype
+- No obvious market
+- Motion sickness
+- VR boom of 90s died down
+- Work quietly continued in various labs
+- Palmer Lucky, 2010-Present
+- Head-mounted display prototype in 2010
+- Successful kickstarter campaign in 2012
+- Founded Oculus VR
+- John Carmack (Doom, Quake) early enthusiast if Lucky’s work
+- Bought by Facebook in 2014 for $2-3 billion
+- Kicked off current VR boom
+- Lucky departed FB in 2017
+- Was on the cover of Time magazine
+- Modern Rendering Systems
+- GPU’s are universally used
+- Can render millions of polygons at 60 Hz (60 frames per second)
+- Huge improvement from 90s
+- In VR world, rendering is “solved problem”
+- Features of HMD
+- Deliver separate images to each eye
+- Depth queue- how far away or how near an object is based on how far it shifts
+- Images shown on two small displays (LCD or OLED)
+- Focus the image at comfortable distance
+- Wider angle of view is better (FOV)
+- Heavy head-set is ough on user
+- Tetherless is preferred (no cables to trip over)
+- Oculus Rift HMD
+- Wide field-of-view (270 degrees)
+- Uses Fresnel lenses to focus images
+- Fresnel lens- take a big piece, make a ut, push the little pieces in
+- Really thin, like a business card
+- Tracking Systems
+- Determine (x,y,z) position of HMD
+- Also determine orientation (3 values)
+- Elevation
+- Left and right head movements
+- Head tilt
+- Do this at 60 Hertz or faster
+- Pass this info to rendering system
+- Render scene from viewpoint of HMD
+- Position & orientation give virtual camera placement
+- Head Tracking Systems
+- Magnetic Tracking (1990s)
+- Different ways to get this:
+- Beacons of HMD, camera observes them (outside-in)
+- Cameras on HMD, observes markers, lights, or image features in room
+(inside-out)
+- Oculus Rift Tracking System (Old, outside-in)
+- Infrared beacons mounted on HMD
+- IR light is not visible to the user
+- IR camera observes beacons (outside-in)
+- Deduces HMD position and orientation
+- Traditional computer vision methods
+- More beacons observed, higher accuracy
+- We want to be closer to the beacons
+- Accuracy decreases as we move away from the beacon
+- Not the best
+- Oculus Quest Inside-out Tracking
+- Oculus Quest 1 & 2
+- Four cameras mounted on headset
+- Observe room, looking for “corners”
+- Known as SLAM: simultaneous localization and mapping
+- No need for beacons / lighthouses
+- Can work outdoor to limited extent
+VR Headsets
+Tetherless? Inside/Out? Lighthouse?
+Oculus Quest 1&2 Y Y N
+HTC Vive N Y Y
+Valve Index N Y Y
+Oculus Rift S N N N
+Playstation VR N N N
+Apple Vision Pro N Y N
+Tetherless: No cables
+Inside/Out: Greater range of movement
+Lighthouse: Less tracking error, but more setup
+What is Augmented Reality? (AR)
+- Mixes real with VR
+- A technology that overlays a real world environment with a computer-generated one,
+enhancing the user's experience and shifting their perspective
+Apple Vision Pro
+- Will be released in 2024
+- $3500
+- VR/AR video see-through
+- 4K displays for each eye
+- Eye tracking, hand tracking
+- Lets others see your face (sort of), they can see your eyes
+- Computer-generated fake eyes, they track your eyes, regenerating pieces of a
+virtual avatar for you based on what you’re looking at
+VR Re-branding
+- Name changes over time
+- Sutherland: The Ultimate Display
+- Afte Sutherland: Virtual Environments
+- Lanier: Virtual Reality
+- Zuckerberg: Metaverse
+- Apple: Spatial Computing
+Challenges for VR and AR
+- Motion sickness
+- Users feel dizzy
+- Weight of HMD
+- Lag problem
+- Cannot draw new image instantly
+- Delay between sensed position and new image
+- Brain doesn’t like this
+- Eye focus problems
+- Optics presents image at one virtual “depth”
+- Our brain expects objects at varying distances
+- Lack of Killer App (what makes people want to buy this)
+VR Applications
+- Games
+- Immersive full surround films
+- Collaboration at distance (telepresence)
+- Medicine
+- Education
+- The Metaverse
+Top VR Games
+- Half-life: Alyx, Beat Saber, No Man’s Sky, Moss, Superhot, Skyrim, Keep talking and
+nobody explodes
+Future of VR and AR?
+- VR and AR has not caught on in the mainstream
+Project 2
+- Part A
+- Use Processing (and all the underlying libraries) to make a 3D model of
+something we like
+- Examples
+- Room (virtual toaster)
+- Part B
+- Put your thing in a scene
+- Make it a video, tell a small story
+September 19, 2023:
+Readings: Hidden Surfaces (visible surfaces), Color
+- Painter’s Algorithm
+- Draws the scene in a back to front order
+- We draw the back polygon first, and then later polygons in front hide it
+- Back-to-front
+- Sort polygons by centroid in increasing z
+- Centroid- center of mass, averaging together the vertex locations
+- Draw polygons in order
+- Drawbacks of this
+- If you have three shapes that are each both in front and behind each other,
+then this doesn’t work (you can split up the shapes, but then it loses the
+images that it’s 3 shapes instead of 6)
+-
+- Solving the visible surfaces problem
+- Z-buffer (GPUs have z-buffers built into their hardware), used by most graphics
+cards and devices
+- Invented by Ed Catmull
+- Per-pixel “depth” or “z” information
+- Finger out whichever one has the nearest z value
+- Pseudocode
+- for each pixel (x,y):
+- WritePixel(x, y, background-color)
+- WriteZ(x, y, far) //far is way far out, -infinity z
+- for each polygon:
+- for each pixel (x, y) in the polygon: //polygon rasterization,
+this loop and the one right before it
+- pz = polygon z-value at (x,y)
+- if (pz >= ReadZ(x,y): //if pz is closer to the current
+z value stored for the pixel
+- WriteZ(x, y, pz) //overwrite the old z value
+- WritePixel(x, y, polygon-color-at-(x, y));
+- z-buffer v. color buffer
+- z buffer holds numbers (starting with far, replaces things as their
+distances get changed)
+- color buffers hold the colors that have the greatest z value
+- Both are grids
+- z-buffer method doesn’t matter what order the shapes are drawn in, the
+same thing appears on the color and z-buffer in the end since the pixel
+location colors get replaced
+- Ray tracing
+Color
+- Spectral Energy Distribution (Photon Density), not a real distribution
+- A piece of this graph is within the visible spectrum, the whole thing is the spectral
+energy distribution
+- Graphs of photon density at a given wavelength
+- Our eyes only see from ~380nm to ~700nm
+- In that range, we have the colors of the rainbow (red is high, violet
+is low)- roygbiv misses cyan, which is between green and blue
+- Ultraviolet (uv), x-rays, and gamma rays are more dangerous and
+decreasing in that order, and are all below violet
+- Above red is IR, then microwaves, then radio waves
+- Eye
+- Both lens and cornea focus the images for us
+- Retina is where photoreceptors live
+- Photoreceptors: special cells in the eye that are sensitive to light
+- Cells that detect light
+- 2 kinds in the human eye: rods and cones
+- Rods (1 kind, used for low light situations, in the periphery)
+- Rhodopsin (name of pigment)
+- Cones (mostly in the fovea)
+- Photopigments (color, 3 kinds)
+- Short, medium, and long wavelength photoreceptors
+- Abbreviated as blue, green, and red in that order
+- Having less than 3 photoreceptors is known as color
+blindness
+- Cone sensitivities overlap between short, medium, and long
+- Sometimes, all three or multiple will fire, just at
+different strengths
+- Liquid inside the eye is the vitreous humor/fluid
+- Mantis Shrimp
+- Arms have spikes like the praying mantis
+- Have 12-16 photoreceptors
+- Some are sensitive to wavelengths, others sensitive
+to polarized light
+September 21, 2023:
+Color Spaces
+- Colors of the rainbow are on the outside of the space, on the inside is white
+- CIE Chromaticity Diagram
+-
+- Colors on the top are spectral
+- Can give numbers to these colors, numbers for photons (wavelengths)
+- Colors on the bottom (violet, magenta, red) are non spectral colors (cannot be defined by
+a specific wavelength)
+- If you draw a straight line through the white space, you get two
+complimentary/complementary colors (the colors mix to form white)
+- CIE Chromaticity Diagram is often used to describe the gamut
+- Gamut: the range of colors a display device can show
+-
+- Additive Color Space
+- RGB Color Space
+- Most ppl think of it as a cube
+- Black (0, 0, 0) → White (1, 1, 1)
+- Red (1, 0, 0)
+- Green (0, 1, 0)
+- Blue (0, 0, 1)
+- Cyan (0, 1, 1)
+- Magenta (1, 0, 1)
+- Yellow (1, 1, 0)
+- From black to white: different shades of gray
+- Subtractive Color Space
+- CMY: cyan, magenta, yellow (paint or ink)
+- [C over M over Y] = [1 over 1 over 1] - [R over G over B]
+- Subtractive color space
+- CMYK: can, magenta, yellow, black
+- Used in printers
+- Additive Colors- display device (backlight) produces photons, mixing colors that we
+produce
+- R + G = yellow
+- R + B = magenta
+- B + G = cyan
+- R + G +B = white
+- Nothing = black
+- Examples:
+- LCD screens, projector (project colors onto screens)
+- Subtractive Colors- display that absorbs photons: ink, paint
+- Pigment: particles that absorb color
+- C + M = blue
+- Y + M = red
+- C + Y = green
+- C + M + Y = black
+- Nothing = white
+- Photons come from light source, not display device
+- Subtractive system
+- Surface with cyan pain, white light source giving off photons with r,g,b
+wavelengths
+- Cyan absorbs red, green and blue photons bounce off, our eyes have the
+impression of cyan (the absence of red)
+- Vocabulary words (lol)
+- Graph the dominant wavelength
+- Blue (B g r), Cyan (B G r), Green (b G r), Yellow (b G R), Red (b g R),
+Magenta (B g R) (no dominant wavelength for magenta)
+- There is no real color wheel, our brains make us think we can loop back from one
+end of the wheel to the other
+- Metamers- spectral distributions that look the same (to humans), but are actually
+different
+- Diagrams (wavelength v. photon strength)
+-
+- What is Red, Blue, Yellow?
+- Primary colors? Not really
+- Why?
+- Old pigments
+- Black: carbon, bone
+- White: bone, lead
+- Red Ochre: iron oxide
+- Yellow Ochre: clay and silica
+- Egyptian Blue: mixture of silica, copper, and calcium
+- Mixing these colors is not as effective as mixing cyan, yellow, and magenta
+- Early people that mixed colors had these ones available to them
+- HSV Color Space
+- Hue, saturation, value
+- Represented by an upside-down cone
+- Saturation of 0 is gray, x-axis
+- Value is y-axis
+- Hue is degrees, how far around the wheel we go
+- Black is tip of the cone
+- HSV Hex Cone
+- Represented by a hexagonal cone
+- Order: red, yellow, green, cyan, blue, and magenta
+-
+- Magenta is 300 ^
+- Slightly distorted version of the rgb color cube
+- HSV is good for use color picking (human intuition on how we think about
+colors)
+- HLS Color Space (hue, lightness, saturation)
+-
+- Good for color picking, human intuition
+- Color Spaces
+- CIE Chromaticity color space, additive, subtractive, HSV color space, and HLS
+color space
+Project 2A
+- Make 3D model
+Project 2B
+- Animate it in scene that we also create using simple shapes
+September 26, 2023:
+Reading: Shading
+- There is no such thing as a perfect mirror
+Surfaces:
+1. Diffuse
+a. Doesn’t matter where the object came in, just matters where the light is
+b. Surface where the photons bounce whatever way, no matter what the incoming
+directions they had
+c. Lambertian surface
+d. Matte surface
+e. Examples: matte paint, paper, chalk
+2. Glossy
+a. In the middle of mirror and diffuse
+3. Mirror
+a. Light reflects back at the same exact angle it came in through
+Vocabulary and key terms
+- Dot product is a good way of calculating the cosine between two unit vectors
+- N- surface normal
+- The direction normal to the mirror (unit length)
+- N = (𝐸 x )/|( x )|
+1
+𝐸
+2
+𝐸
+1
+𝐸
+2
+Shading
+- Calculate color of point on a surface
+Factors
+- Light sources, surface properties (which wavelengths are reflected? Rough or smooth?)
+- We want to use cosines in shading
+Diffuse Shading
+- C = “color” of surface
+- C ∝ (is proportional to) 𝐶 (N * L)
+𝑟
+- L is a vector that points out the light surface from the point of the shape
+- N * L is just cosine(theta)
+- For for the color of the light source 𝐶 ,
+𝑙
+- C = 𝐶
+𝑟
+𝐶
+𝑙
+(𝑁 * 𝐿)
+- 𝐶 = ( , , )
+𝑟
+𝐶
+𝑟
+𝑅
+𝐶
+𝑟
+𝐺
+𝐶
+𝑟
+𝐵
+- 𝐶 = ( , , )
+𝑙
+𝐶
+𝑙
+𝑅
+𝐶
+𝑙
+𝐺
+𝐶
+𝑙
+𝐵
+- 𝐶 = (N*L) 𝑅
+𝐶
+𝑟
+𝑅
+𝐶
+𝑙
+𝑅
+- 𝐶 = (N*L) 𝐺
+𝐶
+𝑟
+𝐺
+𝐶
+𝑙
+𝐺
+- 𝐶 = (N*L) 𝐵
+𝐶
+𝑟
+𝐵
+𝐶
+𝑙
+𝐵
+- C = 𝐶
+𝑟
+𝐶
+𝑙
+* 𝑚𝑎𝑥(0, 𝑁 * 𝐿)
+- What about the other surfaces?
+“Ambient Light”
+- C = 𝐶
+𝑟
+* (𝐶
+𝑅 + 𝐶
+𝑙
+* 𝑚𝑎𝑥(0, 𝑁 * 𝐿))
+- 𝐶 isn’t perfectly exact, but it’s close enough to be accurate
+𝑅
+Shiny Surfaces
+- We have a surface normal, and then the vector and angle at which the light enters the
+surface
+- The R vector should exit the surface at the exact same angle as it entered through
+(if it is a shiny surface)
+- R vector- perfect reflection direction
+- Phong Illumination
+- C = 𝐶 *max 𝑙
+(0, 𝐸 * 𝑅)
+𝑃
+- E * R is the cosine(∝)
+- P is specular power- how perfect a mirror is it, the higher the power, the closer it
+is a to a mirrored surface
+- E is the eye direction
+- Compute:
+- 2N(N * L)
+- Create a parallelogram between the starting surface point and the point
+2N(N * L)
+- R = 2N(N * L) - L
+- Halfway Vector H
+- What is the vector halfway between E and L?
+- If E and L are perfectly balanced, then H is N
+- H = (L + E)/(|L + E|), unit length
+- We want to measure the angle beta, between H and N
+- beta = (𝐻 * 𝑁) = , where Q is the specular power
+𝑄
+𝑐𝑜𝑠(β)
+𝑄
+- Put it all together:
+- C = 𝐶
+𝑟
+(𝐶
+𝑅 + 𝐶
+𝑙𝑚𝑎𝑥(0, 𝑁 * 𝐿)) + 𝐶
+𝑙
+𝐶
+𝑃
+(𝐻 * 𝑁)
+𝑄
+-
+Specular Power
+- Looking at the cosine between N and H, or the cosine between N and L, raising it to the
+power of how close it is to an actual mirror
+- small P: fairly rough surface (like 𝑃 or )
+1
+𝑃
+2
+- Large P: getting a shinier and smoother surface
+-
+Specular Color
+- There are two things we care about: metals and plastics
+- 𝐶 is the color of the highlight
+𝑃
+- Metals
+- Metals are usually fairly smooth, a lot of the light bounces off in the mirror
+direction, a little in other directions
+- 𝐶
+𝑃 = (1, 0, 0)
+- Plastics
+- Some light reflects off the surface directly (the color of the light source, not the
+color of the pigment particles)
+- Some of the pigment color will also go straight through the surface
+- 𝐶
+𝑃 = (1, 1, 1)
+-
+September 28, 2023:
+Reading: Shadows, Ray tracing
+Finishing up shading (different kinds and where we can apply them):
+- If we just have a diffuse surface, we only care about the cosine between N and L, since it
+doesn’t matter where the eye is
+- If you have a glossy or mirror light surface, then if our eye is roughly in the direction of
+the reflection, then we see a glint.
+- Where to shade?
+- Per polygon (“flat” shading)
+-
+- Shaded nicely
+- Per vertex (Gouraud Interpolation)
+- Linear interpolation of colors
+-
+- Per pixel (Phong Interpretation)
+- This is more expensive
+- Per-pixel things
+- Calculations are per pixel
+- Don’t interpolate colors
+- Linear interpolation of normals, but also per pixel normalization of those
+normal vectors
+- Used in most high-quality renderers for shading triangles
+-
+- Vertex normals
+- Average the adjacent triangle normals
+- Gaps in shading/shades
+-
+Shadows:
+- Attached v. cast shadows
+-
+-
+- Rasterization Methods for (cast) Shadows?
+- Shadow Volumes
+- Shadow Maps, or 2-pass z-buffer shadows
+- 1. Render scene from the pov of the Light
+- 2. Render scene from the eye position
+- 3. Find which pixels in (2) are hidden from light using (1)
+-
+- 3 different spaces
+- World space
+- Eye space
+- Going from world space → eye space is going from 3D
+geometry to right before perspective projection
+- It’s a 3D transformation
+- Going backwards is v transpose
+- Light space
+- Going from world space to light space is L
+- Going from Eye space to Light space
+- P’ = L*V^(-1)*P
+- First go to world space, and then to light space
+-
+Ray tracing
+- Advantages
+- Reflection, refraction
+- Shadows
+- Easy to code
+- Easy to make object-oriented
+- Excellent images
+- Great for high-quality animation
+- Disadvantages
+- Slow compared to rasterization for most scenes
+- Hard to put it in hardware (vs rasterization)
+- Ray tracing in a nutshell
+- We have a virtual eye, and there is a view plane and a scene drawn in 3D
+- We create what’s known as a ray
+- Ray’s origin is eye, ray direction is towards the view plane
+- Does the ray hit object 1? Does the ray hit object 2? Does it hit object 3?
+- If yes, then we go ahead and shade that place where it hits
+-
+October 3, 2023:
+Ray Tracing Pseudocode:
+- for each pixel(x3, y3):
+- create ray R from eye thru (x3, y3)
+- for each object Oi in scene:
+- if R intersects Oi and is closest so far
+- record intersection
+- shade pixel based on the nearest intersection
+Mathematical description for ray: parametric
+Mathematical description for object: inducive(???)
+● Ray Tracing
+○ Reason it’s slow
+■ The second for loop (if we have a lot of pixels and a lot of objects)
+■
+○ The ray equation is parametric
+■ Parameter t
+● x(t) = 𝑥 =
+0 + 𝑡(𝑥
+1 − 𝑥
+0
+) 𝑥
+0 + 𝑑𝑥
+● y(t) = 𝑦 =
+0 + 𝑡(𝑦
+1 − 𝑦
+0
+) 𝑦
+0 + 𝑑𝑦
+● z(t) = 𝑧 =
+0 + 𝑡(𝑧
+1 − 𝑧
+0
+) 𝑧
+0 + 𝑑𝑧
+● P(t) + O + tD
+○ O = origin = (𝑥 , , )
+0
+𝑦
+0
+𝑧
+0
+○ D = direction = (dx, dy, dz)
+● Intersect Ray with Canonical Sphere
+○ 𝑥
+2
++ 𝑦
+2
++ 𝑧
+2 = 1
+○ Radius = 1, center B = (0, 0, 0)
+○ (𝑥
+0 + 𝑡𝑑𝑥)
+2
++ (𝑦
+0 + 𝑡𝑑𝑦)
+2
++ (𝑧
+0 + 𝑡𝑑𝑧)
+2 = 1
+○ 𝑡
+2
+(𝑑𝑥
+2
++ 𝑑𝑦
+2
++ 𝑑𝑧
+2
+) + 𝑡 * 𝑧(𝑥
+0
+𝑑𝑥 + 𝑦
+0
+𝑑𝑦 + 𝑧
+0
+𝑑𝑧) + 𝑥
+0
+2
++ 𝑦
+0
+2
++ 𝑧
+0
+2 − 1 = 0
+○ a = (𝑑𝑥
+2
++ 𝑑𝑦
+2
++ 𝑑𝑧
+2
+)
+○ b = 𝑧(𝑥
+0
+𝑑𝑥 + 𝑦
+0
+𝑑𝑦 + 𝑧
+0
+𝑑𝑧)
+○ c = 𝑥
+0
+2
++ 𝑦
+0
+2
++ 𝑧
+0
+2 − 1
+○ 𝑎𝑡
+2
++ 𝑏𝑡 + 𝑐 = 0
+○ 𝑡 = (− 𝑏 + / − 𝑏
+2 − 4𝑎𝑐)/2𝑎
+○ 3 scenarios:
+■ 2 real roots
+● If real roots are negative, that means they are behind the eye, and
+so we ignore them
+■ No real roots
+■ 1 real root
+○ (𝑥 − 𝑥
+𝑐
+)
+2
++ (𝑦 − 𝑦
+𝑐
+)
+2
++ (𝑧 − 𝑧
+𝑐
+)
+2 = 𝑟
+2
+○ (𝑥 ) = center of sphere
+𝑐
+, 𝑦
+𝑐
+, 𝑧
+𝑐
+● Plane Equation (implicit form of a plane equation)
+○ Looks a lot like an implicit equation for a line
+○ f(x, y, z) = ax + by + cz + d = 0
+○ Parameters of plane= a, b, c, and d
+○ Given P, Q, R that are 3D points:
+■ Find a, b, c, d of plane thru these points
+■ A vector going from P to Q = PQ = Q - P
+■ To get a surface normal that is perpendicular to PQ and PR:
+● N = (PQ x PR)/(|PQ x PR|) = (a, b, c)
+● (cross product) ^
+● Surface normal is the direction of maximum change
+■ Find d by substituting P = (𝑥 ) into plane equation
+𝑃
+, 𝑦
+𝑃
+, 𝑧
+𝑃
+● Point in Triangle (first in 2D, and eventually in 3D)
+○ Do a half-plane test
+■ 1. Extend out the edges so that they’re infinite lines
+■ 2. Define a function that tells us which side of the line we’re on (plus side
+is inside the triangle)
+■ 3. If the point is +++, then we’re on the inside of the triangle
+■ We do 3 half-plane tests to test if the point is in the triangle or not
+○
+○ 2D- which side of the line thru AB is P on?
+■
+■ define function: //side function
+● side(A, B, P) returns 𝑉
+𝑧
+● //This function is the two if statements
+○ P in triangle ABC?
+■ side(A, B, P)
+■ side(B, C, P)
+■ side(C, A, P)
+● same sign → in
+● different sign → out
+● Keep the same orientation (A → B, B → C, C → A)
+○ Otherwise, we’ll flip the orientation, and the signs will
+change
+○ Ray-triangle Intersection
+■ 3D time- test whether a ray hits a triangle
+■ Ray
+● x(t) = 𝑥
+0 + 𝑡 * 𝑑𝑥
+● y(t) = …
+● z(t) = …
+■ 1. Intersect ray with plane of triangle
+■ 2. Perform point-in-triangle test in 3D
+■ Plane equation:
+● ax + by + cz + d = 0
+● 𝑎(𝑥
+0 + 𝑡𝑑𝑥) + 𝑏(𝑦
+0 + 𝑡𝑑𝑦) + 𝑐(𝑧
+0 + 𝑡𝑑𝑧) + 𝑑 = 0
+● 𝑡(𝑎𝑑𝑥 + 𝑏𝑑𝑦 + 𝑐𝑑𝑧) + (𝑎𝑥
+0 + 𝑏𝑦
+0 + 𝑐𝑧
+0 + 𝑑) = 0
+● t = − (𝑎𝑥
+0 + 𝑏𝑦
+0 + 𝑐𝑧
+0 + 𝑑)/(𝑎𝑑𝑥 + 𝑏𝑑𝑦 + 𝑐𝑑𝑧)
+○ No division by zero
+○ When the ray is parallel to the plane, the denominator will
+be zero, so we can ignore it
+● Play t into ray equation to get 3D intersection point.
+● Our 2D method works!
+○ Calculate cross product
+○ V = AP x AB
+○ Compare it to the surface normal N
+○ side(A, P, N, B) = sign of N * (AP x AB)
+■ side(A, P, N, P)
+■ side(B, C, N, P)
+■ side(C, A, N, P)
+● If they’re all the same sign, then we’re
+inside the triangle, and otherwise, we’re
+outside the triangle
+● Cross products between a vector to the
+point, and a vector along the edge, give us
+something perpendicular to the plane as well
+○ By testing that three times, we can
+figure out whether the point is inside
+or outside the triangle
+○
+● How to tell if something uses ray tracing?
+○ Reflection, refractions, caustic (???)
+○ Ice Age movies
+○ Monster University- the first pixar movie to use ray tracing
+■ Before that, they sued rasterization
+● Bug’s Life
+● Toy Story
+● Monster’s Inc.
+○ Reflections
+■ Ray tracing evokes recursion
+● Rays spawn other rays
+■
+■ c = ray color = ambient + diffuse + specular + 𝑘 *
+𝑟𝑒𝑓𝑙
+𝑐
+𝑟𝑒𝑓𝑙
+● 𝑘 = how perfect is the mirror
+𝑟𝑒𝑓𝑙
+● 𝑐 = color of reflection
+𝑟𝑒𝑓𝑙
+October 5, 2023:
+c = ambient + diffuse + specular + 𝑘 * + *
+𝑟𝑒𝑓𝑙
+𝑐
+𝑟𝑒𝑓𝑙
+𝑘
+𝑡𝑟𝑎𝑛𝑠
+𝑐
+𝑡𝑟𝑎𝑛𝑠
+c - ray color
+𝑘 = how perspect a mirror is from 0 to 1
+𝑟𝑒𝑓𝑙
+𝑐 = color of reflected ray
+𝑟𝑒𝑓𝑙
+● How to calculate the direction of a reflected ray
+○ R = 2𝑁(𝑉 * 𝑁) − 𝑉
+○ Ray’s origin is wherever the ray hits the mirror
+● How do you break the recursion of ray tracing?
+○ One way
+■ Terminate: ray “depth” is too light (eg. 20 bounces)
+○ Another way
+■ When the contribution is too small
+Transparent Surfaces
+● Ex. water
+●
+● Index of refraction
+○ A ratio
+○ (speed of light through a vacuum)/(speed of light through whatever material we
+have)
+○ Speed of light through a vacuum will be the fastest- larger number
+○ Index of refraction will always be >= 1
+○
+Material Index ղ
+Vacuum 1
+air 1.0003
+waer 1.33
+crown glass ~1.5
+ice 1.309
+quartz 1.544
+diamond 2.417
+● Snell’s Law
+○
+○ Photons travel the same pathway both forward and backward
+○
+○ This ^ is important for fiber-optic cable (such a high index of refraction that
+unless the light is coming a particular way, then there is none coming out)
+● We’re cheating (??) when we use ray tracing
+○ Particles of light don’t actually shoot out of our eye
+■ They shoot out of light sources, hit the object, and then hit our eyes
+○ Most ray tracing algorithms come out of people’s eyes and then go to the object
+(reverse)
+● c = 𝑐
+𝑎
+𝑐
+𝑟 +
+𝑖=1
+𝑛
+∑ 𝑠
+𝑖
+𝑐
+𝑙𝑖
+(𝑐
+𝑟
+(𝑁 * 𝐿
+𝑖
+)) + 𝑠𝑝𝑒𝑐𝑢𝑙𝑎𝑟
+○
+○ 𝑠 is the visibility between light #i and the ray origin
+𝑖
+■ If unblocked light source, it’s 1
+● If it’s blocked, 𝑠
+𝑖 = 0
+Advanced Effects
+● Soft shadow
+○ As we get further from the object, the shadow turns more fuzzy
+● Total shadow area
+○ Umbra
+● Partial shadow area
+○ Penumbra
+● Glossy surface
+○ There is a small reflection
+○ Costs more than a perfect mirror
+● Depth of field
+○ 1/640 → closer are in focus, the far away is horrible, you can;t see it
+○ 1/15 → narrow depth of field, the far away is much less blurry
+● Motion blur
+○ The stable portions are in focus, the parts that are moving are out of focus
+■ Ex. a building and a moving car (the building is in focus, the car is not)
+● If we have a point source
+○ All the photons are coming from one singular place
+○ The relevant geometry is that we just get one big circle of total shadow
+■ Shadows are all about visibility
+○ Hard shadow
+○
+● If we have a disc as a light source
+○ This will be what’s responsible for a soft shadow
+○
+● Hard shadow situation
+○
+● Distribution ray tracing say that for a lot less work, we can do a much better job
+○ With distribution ray tracing, we can have light rays that go to many different
+places
+○ Using a shadow ray to say how many rays hit the object and how many don’t
+○ Uch more expensive
+○ Using a probability distribution of rays towards the light source
+○
+○ This ^ gets us a soft shadow
+Glossy Reflection
+● Regular reflection v. glossy reflection
+○
+Translucent Reflection
+● Frosted glass
+● Shower glass
+Motion Blur (another effect)
+● What does it mean for a ray to have a different time?
+○ If time = 0, then ball is here
+○ If time = 1, then ball is here
+○ Different positions for ball at different times
+○ Cast a bunch of rays, average the ray colors at the different times, and determine
+the colors of each ray
+Increase Light Samples
+● Cast more rays per pixel
+●
+● Add a bit of randomness to the direction of rays that you’re shooting
+○ How to add randomness
+■ Jittered sampling
+●
+● Points on light ^
+● Do it randomly each time, per pixel we use a different random
+sample, each of the above drawings is per pixel
+Depth of Field Effects (soft effects)
+● Pinhole camera
+○
+○ Only let a tiny amount of light through
+○ Downside
+■ Friend needs to stay still for 5 minutes
+■ Modern-day solution
+●
+● The light through the middle of the (wide) lens, as well as other
+parts of the lens ends up at that specific point. The lens focuses al
+the light to a specific point
+● The dotted line is the focal plane of the lens
+● Circle of confusion
+○ the range of places where out of focus objects will be
+shown
+■ How to use distribution ray tracing to get depth of field effects
+●
+● Distribute rays over the lens
+● Different rays going from different parts of the lens
+● Cast a bunch of rays from different points on the lens, make them
+all go through point P, average together those colors
+● They should all intersect at point P
+October 11, 2023:
+Graphics Practice Test:
+1. The hardware in most graphics cards is NOT based on ray tracing.
+2. During triangle rasterization, you are using Gouraud interpolation (linear interpolation) of
+colors across a triangle to determine the color of the pixels. The triangle you are
+rendering has 3 vertices P1, P2, and P3, with screens-apce coordinates P1 = (20, 20), P2
+= (20, 60) and P3 = (80, 50). These three vertices have the following RGB colors:
+a. 𝐶 = (200, 100, 50)
+1
+b. 𝐶 = (120, 100, 50)
+2
+c. 𝐶 = (240, 100, 50)
+3
+d. What is the RGB color at the pixel position P = (20, 40)?
+e. Answer:
+i. 𝑐
+? = 𝑐
+1 + (𝑦
+2 − 𝑦
+1
+)/(𝑥
+2 − 𝑥
+1
+) * (𝑐
+2 − 𝑐
+1
+)
+ii. 𝑐
+? = 𝑐
+1 + (40 − 20)/(60 − 20) * (𝑐
+2 − 𝑐
+1
+)
+iii. 𝑐
+? = 𝑐
+1 + 1/2 * (𝑐
+2 − 𝑐
+1
+)
+iv. 𝑐
+? = (200, 100, 50) + 1/2(− 80, 0, 0)
+v. 𝑐
+? = (160, 100, 50)
+3. What color is complementary to green?
+a. Magenta
+4. Dot product
+a. |a||b|*cos(t) = 𝑥
+𝑎
+* 𝑥
+𝑏 + 𝑦
+𝑎
+* 𝑦
+𝑏 + 𝑧
+𝑎
+* 𝑧
+𝑏
+5. Cross product
+a. |a x b| = |a||b|*sit(t), perpendicular to plane made by a and b
+6. Raster image
+a. 2D array that stores pixel value for each pixel (typically as R, G, B)
+7. Emissive display
+a. pixels emit varying amounts of light (ex. LED)
+8. Transmissive display
+a. backlight required, pixels vary the amount of light passing through them (ex.
+LCD)
+9. Demosaicking
+a. used with input devices, process of filling in missing values when each pixel only
+measures R, G, or B
+10. Bayer mosaic
+a. G B
+b. R G
+11. High dynamic range (HDR) image
+a. Stored using floating point numbers
+12. Low dynamic range (LDR) image
+a. Stored using integers
+13. Additive color combinations: R+G, G+B, B+R, R+G+B
+a. R+G = yellow, G+B = cyan, B+R = magenta, R+G+B = white
+14. Alpha compositing
+a. lets background color show through
+15. Alpha/Transparency mask
+a. grayscale version of image that stores all alpha values
+16. Viewing ray
+a. line that emanates from a pixel in the direction it's looking
+17. Parallel projection
+a. 3D points are mapped to 2D by moving them along a projection direction until
+they hit the image plane
+18. Perspective projection
+a. points are projected along lines that pass through the viewpoint
+19. Rays fired in orthographic view
+a. direction = -w, origin = e + xu + yv
+20. Rays fired in perspective view
+a. direction = -dw + xu + yv, origin = e
+21. Ray-sphere intersection
+a. (e + td - c) * (e + td - c) - r^2 = 0
+22. Lambertian shading
+a. view independent & doesn’t produce highlights/specular reflections
+23. Blinn-Phong shading
+a. Last term adds ambient light
+24. Frame-to-canonical matrix
+a. transforms a position p from frame e, u, v to the canonical frame o, x, y
+25. Camera/Eye transformation
+a. rigid body transformation that puts the camera at the origin in a convenient
+orientation. Depends only on camera position & orientation
+26. Projection transformation
+a. projects points from camera space so all visible points have x & y in range [-1, 1]
+27. Viewport/windowing transformation
+a. maps unit image rectangle to desired rectangle in pixel coordinates
+28. Canonical view volume
+a. 2 x 2 x 2 cube, result of projection transformation
+29. Orthographic view volume
+a. axis-aligned box with dimensions [l, r] x [b, t] x [f, n]
+30. Homogeneous coordinates
+a. treat all points on a line/scalar multiples of a vector as referring to the same point
+31. Full view transformation matrix
+a. M = MvpMorthP*Mcam
+32. Culling
+a. identifying geometry that isn't visible from the camera and ignoring it
+33. Clipping
+a. removes parts of primitives that could extend behind the camera
+34. Graphics pipeline
+a. series of steps taken to go from a 3D world to a 2D image on the screen;
+Application -> Command Stream -> Vertex Processing -> Transformed Geometry
+-> Rasterization -> Fragment -> Fragment Processing -> Blending -> Framebuffer
+Image -> Display
+35. Consider the perspective projection with center of projection (viewpoint) at (0,0) and
+projecting to the line (screen) at y = 1 and two line segments:
+a. A connecting (2,2) and (-100, 100)
+b. B connecting (1,3) and (-1,3)
+c. Which of the two lines (A or B) is visible through the point (0, 1)? and why?
+d. Answer
+i.
+36. Vector Graphics
+a. Vector graphics are a type of computer graphics that use mathematical algorithms
+to define lines, shapes, and colors. Vector graphics are resolution-independent,
+meaning they can be scaled up or down without losing any quality.
+37. Raster Image
+a. A raster image is composed of pixels, which are small squares of color. Each pixel
+contains information about the color of the image at that point. Raster images are
+resolution-dependent,meaning they lose quality when they are scaled up or down.
+38. Rasterization
+a.
+39. Reflectance Equation
+a.
+40. Why do we need two framebuffers if we are creating moving images on a workstation
+screen?
+a.
+41. Matrix Stack and Transformation Matrix
+a. Translation → Rotation
+b. I*T*R
+42. Assume you are using Gouraud interpolation across a triangle that has a non-zero
+specular component in its shading function. Is it possible to miss a highlight entirely that
+is supposed to be in the middle of the triangle?
+a. Yes. (No for Phong interpolation)
+43. Phong Interpolation
+a. The idea behind Phong interpolation during rasterization is to interpolate normals
+across a polygon that will then be used for shading

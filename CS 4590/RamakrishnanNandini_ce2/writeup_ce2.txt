@@ -1,0 +1,7 @@
+Author: Nandini Ramakrishnan
+
+Desription of the Environment I recorded my Sounds in (For the Background Sound):
+For the background sound, I recorded around 12-13 seconds of audio in my living room, the opening of the balcony door, hearing the background sounds from outside, and then the closing of the balcony door. Initially, my roommates and I had music playing from the TV, which may be heard pretty faintly in the audio sample. Additionally, one of my roommates was sweeping the floor, which might have also been heard faintly in the audio sample. After that, you can hear the noise of the balcony door opening, the sound of wind and cars from outside, and then the balcony door closing ends the sound sample. This audio was recorded on my phone.
+
+Source of my Voiceover Sentence (Website or Book):
+The voiceover sentence was made by me reading out a sentence from my computer graphics (CS 3451) textbook. The book is titled Fundamentals of Computer Graphics (FIFTH EDITION), and I read out the first sentence of Section 2.3.1: Angles. The sentence read, "Although we take angles somewhat for granted, we should return to their definition so we can extend the idea of the angle onto the sphere." Here is the url of the book and page: https://learning.oreilly.com/library/view/fundamentals-of-computer/9781000426359/xhtml/C07_chapter2.xhtml#sec2_3
